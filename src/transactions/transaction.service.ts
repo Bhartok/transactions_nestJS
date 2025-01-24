@@ -45,7 +45,6 @@ export class TransactionService {
     userId: string,
     input: Partial<Transaction>,
   ): Promise<{ affected_count: number; transaction: Transaction[] }> {
-    console.log(input);
     const [affected_count, transaction] = await this.transactionModel.update(
       { ...input },
       { where: { userId, id: transactionId }, returning: true },
