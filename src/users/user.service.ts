@@ -2,6 +2,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from './user.model';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
+import { PaginationDto } from './userPagination-dto';
 
 @Injectable()
 export class UsersService {
@@ -11,8 +12,12 @@ export class UsersService {
     @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
-  async getAll(): Promise<User[]> {
-    return await this.userModel.findAll();
+  async getAll(paginationDto: PaginationDto): Promise<User[]> {
+    const { page, limit } = paginationDto;
+
+    const offset = (page - 1) * limit;
+
+    return await this.userModel.findAll({ limit, offset });
   }
 
   async getById(id: string, options: any): Promise<User> {
@@ -33,7 +38,10 @@ export class UsersService {
         lock: transaction.LOCK.UPDATE,
       });
 
-      const receiverAccount = await this.getById(receiverId, { transaction });
+      const receiverAccount = await this.getById(receiverId, {
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
 
       if (!(senderAccount && receiverAccount)) {
         throw new BadRequestException('Account not found');

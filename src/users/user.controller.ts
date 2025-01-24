@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
 import { GetId } from 'src/auth/decorator/user-decorator';
+import { PaginationDto } from './userPagination-dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -9,8 +10,8 @@ export class UserController {
   constructor(private usersService: UsersService) {}
 
   @Get('/')
-  async getAll() {
-    return await this.usersService.getAll();
+  async getAll(@Query() paginationDto: PaginationDto) {
+    return await this.usersService.getAll(paginationDto);
   }
 
   @Get('/money/')
