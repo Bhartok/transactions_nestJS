@@ -26,16 +26,15 @@ export class TransactionService {
     return { transaction };
   }
 
-  async createTransaction(
-    input: Partial<Transaction>,
-  ): Promise<{ transaction: Transaction }> {
-    const { userId, title, description, amount } = input;
+  async createTransaction(input) {
+    const { userId, title, description, amount, type } = input;
 
     const transaction = await this.transactionModel.create({
       title,
       description,
       amount,
       userId,
+      type,
     });
 
     return { transaction };
@@ -46,18 +45,15 @@ export class TransactionService {
     userId: string,
     input: Partial<Transaction>,
   ): Promise<{ affected_count: number; transaction: Transaction[] }> {
-    console.log(input);
     const [affected_count, transaction] = await this.transactionModel.update(
       { ...input },
       { where: { userId, id: transactionId }, returning: true },
     );
     return { affected_count, transaction };
-    // return transaction;
   }
 
   async deleteTransaction(transactionId: number, userId: string) {
     try {
-      console.log('mira mama estoy en el delete, con:', userId, transactionId);
       const transaction = await this.transactionModel.findOne({
         where: { userId, id: transactionId },
       });

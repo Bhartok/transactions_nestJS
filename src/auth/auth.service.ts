@@ -5,7 +5,6 @@ import {
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/users/user.model';
-import { UserDto } from './auth-user.dto';
 import * as argon from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 
@@ -29,16 +28,16 @@ export class AuthService {
     }
   }
 
-  async signin(dto: UserDto): Promise<{ acces_token: string }> {
+  async signin(dto: Partial<User>): Promise<{ acces_token: string }> {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ where: { email } });
     if (!user) {
-      throw new ForbiddenException('No existing email');
+      throw new ForbiddenException('error fetching user');
     }
     const pwMatches = await argon.verify(user.password, password);
 
     if (!pwMatches) {
-      throw new ForbiddenException('Incorrect password');
+      throw new ForbiddenException('error fetching user');
     }
 
     return this.signToken(user.id);
