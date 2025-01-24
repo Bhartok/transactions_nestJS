@@ -29,7 +29,7 @@ export class TransactionService {
   async createTransaction(input) {
     const { userId, title, description, amount, type } = input;
 
-    const transaction = this.transactionModel.create({
+    const transaction = await this.transactionModel.create({
       title,
       description,
       amount,
