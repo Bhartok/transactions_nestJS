@@ -1,14 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import { Transaction } from './transaction.model';
 import { InjectModel } from '@nestjs/sequelize';
-import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectModel(Transaction)
     private transactionModel: typeof Transaction,
-    private httpService: HttpService,
   ) {}
 
   async getAll(id: string): Promise<{ transactions: Transaction[] }> {
@@ -53,12 +51,10 @@ export class TransactionService {
       { where: { userId, id: transactionId }, returning: true },
     );
     return { affected_count, transaction };
-    // return transaction;
   }
 
   async deleteTransaction(transactionId: number, userId: string) {
     try {
-      console.log('mira mama estoy en el delete, con:', userId, transactionId);
       const transaction = await this.transactionModel.findOne({
         where: { userId, id: transactionId },
       });

@@ -9,5 +9,5 @@ export class UserDto {
 
   @IsOptional()
   @IsNumber()
-  balance?: number;
+  balance: number;
 }

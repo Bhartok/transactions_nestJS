@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { UsersService } from './user.service';
 import { AuthGuard } from '@nestjs/passport';
+import { GetId } from 'src/auth/decorator/user-decorator';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('users')
@@ -12,16 +13,15 @@ export class UserController {
     return await this.usersService.getAll();
   }
 
-  @Get('/money/:id')
-  async getAllById(@Param('id') id: string) {
+  @Get('/money/')
+  async getAllById(@GetId() id: string) {
     const availableMoney = await this.usersService.getUserMoney(id);
-    console.log(availableMoney);
     return availableMoney;
   }
 
-  @Patch('/money/:id')
+  @Patch('/money/')
   async updateBalance(
-    @Param('id') senderId: string,
+    @GetId() senderId: string,
     @Body() input: { receiverId: string; amount: number },
   ) {
     const { receiverId, amount } = input;

@@ -1,20 +1,22 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { User } from './user.model';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
+import { Sequelize } from 'sequelize-typescript';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectModel(User)
     private userModel: typeof User,
+    @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
   async getAll(): Promise<User[]> {
     return await this.userModel.findAll();
   }
 
-  async getById(id: string): Promise<User> {
-    const user = await this.userModel.findByPk(id);
+  async getById(id: string, options: any): Promise<User> {
+    const user = await this.userModel.findByPk(id, options);
     return user;
   }
 
@@ -25,25 +27,30 @@ export class UsersService {
   }
 
   async transferMoney(senderId: string, receiverId: string, amount: number) {
-    const [senderAccount, receiverAccount] = await Promise.all([
-      this.getById(senderId),
-      this.getById(receiverId),
-    ]);
-    if (!(senderAccount && receiverAccount)) {
-      throw new BadRequestException('Account not found');
-    }
+    return this.sequelize.transaction(async (transaction) => {
+      const senderAccount = await this.getById(senderId, {
+        transaction,
+        lock: transaction.LOCK.UPDATE,
+      });
 
-    if (senderAccount.balance < amount) {
-      throw new BadRequestException('Not enough money');
-    }
+      const receiverAccount = await this.getById(receiverId, { transaction });
 
-    await Promise.all([
-      senderAccount.decrement('balance', { by: amount }),
-      receiverAccount.increment('balance', { by: amount }),
-    ]);
+      if (!(senderAccount && receiverAccount)) {
+        throw new BadRequestException('Account not found');
+      }
 
-    const updatedSenderAccount = await senderAccount.reload();
+      if (senderAccount.balance < amount) {
+        throw new BadRequestException('Not enough money');
+      }
 
-    return { sender: updatedSenderAccount.balance };
+      await Promise.all([
+        senderAccount.decrement('balance', { by: amount, transaction }),
+        receiverAccount.increment('balance', { by: amount, transaction }),
+      ]);
+
+      const updatedSenderAccount = await senderAccount.reload({ transaction });
+
+      return { sender: updatedSenderAccount.balance };
+    });
   }
 }
