@@ -34,6 +34,12 @@ export class Transaction extends Model {
 
   @Column({
     allowNull: false,
+    type: DataType.ENUM('Ingress', 'Egress'),
+  })
+  type: string;
+
+  @Column({
+    allowNull: false,
     type: DataType.INTEGER,
   })
   amount: number;

@@ -21,6 +21,12 @@ export class User extends Model {
   email: string;
 
   @Column({
+    type: DataType.INTEGER,
+    defaultValue: 0,
+  })
+  balance: number;
+
+  @Column({
     type: DataType.STRING(),
     allowNull: false,
   })

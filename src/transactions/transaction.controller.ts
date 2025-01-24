@@ -30,10 +30,16 @@ export class TransactionController {
 
   @Post('/')
   async createTransaction(
-    @Param('id') userId: string,
+    @Param('userId') userId: string,
     @Body() input: CreateTransactionDto,
   ) {
-    const data = { userId, ...input };
+    const data = {
+      userId,
+      title: input.title,
+      description: input.description,
+      amount: input.amount,
+      type: input.type,
+    };
     const transaction = this.transactionService.createTransaction(data);
     return transaction;
   }

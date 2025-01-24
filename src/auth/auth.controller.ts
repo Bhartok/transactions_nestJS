@@ -9,9 +9,9 @@ export class AuthController {
 
   @Post('/signup')
   async signup(@Body() dto: UserDto) {
-    const { email, password } = dto;
+    const { email, password, balance } = dto;
     const hash = await argon.hash(password);
-    const user = this.authService.signup({ email, password: hash });
+    const user = this.authService.signup({ email, password: hash, balance });
     return user;
   }
 

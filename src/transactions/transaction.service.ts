@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Transaction } from './transaction.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { HttpService } from '@nestjs/axios';
 
 @Injectable()
 export class TransactionService {
   constructor(
     @InjectModel(Transaction)
     private transactionModel: typeof Transaction,
+    private httpService: HttpService,
   ) {}
 
   async getAll(id: string): Promise<{ transactions: Transaction[] }> {
@@ -26,16 +28,15 @@ export class TransactionService {
     return { transaction };
   }
 
-  async createTransaction(
-    input: Partial<Transaction>,
-  ): Promise<{ transaction: Transaction }> {
-    const { userId, title, description, amount } = input;
+  async createTransaction(input) {
+    const { userId, title, description, amount, type } = input;
 
-    const transaction = await this.transactionModel.create({
+    const transaction = this.transactionModel.create({
       title,
       description,
       amount,
       userId,
+      type,
     });
 
     return { transaction };

@@ -19,6 +19,7 @@ export class AuthService {
 
   async signup(dto: Partial<User>): Promise<Partial<User> | null> {
     try {
+      console.log(dto);
       const result = await this.userModel.create(dto);
 
       const { id, email } = result.dataValues;
@@ -29,7 +30,7 @@ export class AuthService {
     }
   }
 
-  async signin(dto: UserDto): Promise<{ acces_token: string }> {
+  async signin(dto: Partial<User>): Promise<{ acces_token: string }> {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ where: { email } });
     if (!user) {
