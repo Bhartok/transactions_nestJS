@@ -3,41 +3,97 @@ import {
   ForbiddenException,
   Injectable,
 } from '@nestjs/common';
-import { InjectModel } from '@nestjs/sequelize';
+import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { User } from 'src/users/user.model';
-import * as argon from 'argon2';
+import { SignupInputDto, SignupResponseDto } from './dto/signup-user.dto';
+import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
+import { Sequelize } from 'sequelize';
+import { Balance } from 'src/balance/balance.model';
+import { SigninDto } from './dto/signin-user.dto';
+import { CreateTransactionDto } from 'src/transactions/transaction.dto';
+import { TransactionService } from 'src/transactions/transaction.service';
 
 @Injectable({})
 export class AuthService {
   constructor(
-    @InjectModel(User)
-    private userModel: typeof User,
+    @InjectModel(User) private userModel: typeof User,
+    @InjectModel(Balance) private balanceModel: typeof Balance,
+    private transactionService: TransactionService,
+    @InjectConnection() private readonly sequelize: Sequelize,
     private jwt: JwtService,
   ) {}
 
-  async signup(dto: Partial<User>): Promise<Partial<User> | null> {
+  async hashPassword(
+    password: string,
+    salt: string,
+    iterations: number = 500,
+    keyLength: number = 64,
+  ): Promise<string> {
+    return new Promise((resolve, reject) => {
+      crypto.pbkdf2(
+        password,
+        salt,
+        iterations,
+        keyLength,
+        'sha256',
+        (err, derivedKey) => {
+          if (err) reject(err);
+          resolve(derivedKey.toString('hex'));
+        },
+      );
+    });
+  }
+
+  async signup(dto: SignupInputDto): Promise<Partial<SignupResponseDto>> {
+    const { email, password } = dto;
+    const { amount } = dto;
+    const hashPw = await this.hashPassword(password, 'carboncio');
+    const transaction = await this.sequelize.transaction();
+
     try {
-      const result = await this.userModel.create(dto);
+      const user = await this.userModel.create(
+        { email, password: hashPw },
+        { transaction },
+      );
+      const userId = user.id;
 
-      const { id, email } = result.dataValues;
+      const balance = await this.balanceModel.create(
+        { userId, balance: amount },
+        { transaction },
+      );
 
-      return { id, email };
+      const initialTransactionData: CreateTransactionDto = {
+        title: 'Initialization of the account',
+        userId,
+        description: 'Initial ammount in your account',
+        type: 'Ingress',
+        amount,
+      };
+
+      await this.transactionService.createTransaction(
+        { initialTransactionData },
+        { transaction },
+      );
+
+      await transaction.commit();
+      return { id: user.id, email: user.email, amount: balance.balance };
     } catch {
+      await transaction.rollback();
       throw new BadRequestException('Could not create user');
     }
   }
 
-  async signin(dto: Partial<User>): Promise<{ acces_token: string }> {
+  async signin(dto: SigninDto): Promise<{ acces_token: string }> {
     const { email, password } = dto;
     const user = await this.userModel.findOne({ where: { email } });
     if (!user) {
-      throw new ForbiddenException('error fetching user');
+      throw new ForbiddenException('No existing email');
     }
-    const pwMatches = await argon.verify(user.password, password);
+    const hashPw = await this.hashPassword(password, 'carboncio');
 
-    if (!pwMatches) {
-      throw new ForbiddenException('error fetching user');
+    if (hashPw != user.password) {
+      throw new ForbiddenException('Incorrect password');
     }
 
     return this.signToken(user.id);

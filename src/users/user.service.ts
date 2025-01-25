@@ -3,12 +3,16 @@ import { User } from './user.model';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
 import { PaginationDto } from './userPagination-dto';
+import { Balance } from 'src/balance/balance.model';
+import { CreateTransactionDto } from 'src/transactions/transaction.dto';
+import { TransactionService } from 'src/transactions/transaction.service';
 
 @Injectable()
 export class UsersService {
   constructor(
-    @InjectModel(User)
-    private userModel: typeof User,
+    @InjectModel(User) private userModel: typeof User,
+    @InjectModel(Balance) private balanceModel: typeof Balance,
+    private readonly transactionService: TransactionService,
     @InjectConnection() private readonly sequelize: Sequelize,
   ) {}
 
@@ -33,32 +37,59 @@ export class UsersService {
 
   async transferMoney(senderId: string, receiverId: string, amount: number) {
     return this.sequelize.transaction(async (transaction) => {
-      const senderAccount = await this.getById(senderId, {
+      const senderBalance = await this.balanceModel.findOne({
+        where: { userId: senderId },
         transaction,
         lock: transaction.LOCK.UPDATE,
       });
 
-      const receiverAccount = await this.getById(receiverId, {
+      const receiverBalance = await this.balanceModel.findOne({
+        where: { userId: receiverId },
         transaction,
         lock: transaction.LOCK.UPDATE,
       });
 
-      if (!(senderAccount && receiverAccount)) {
+      if (!(senderBalance && receiverBalance)) {
         throw new BadRequestException('Account not found');
       }
 
-      if (senderAccount.balance < amount) {
+      if (senderBalance.balance < amount) {
         throw new BadRequestException('Not enough money');
       }
 
+      const senderTransactionData: CreateTransactionDto = {
+        userId: senderId,
+        title: `money transfer`,
+        description: `Transfered money to user ${receiverId}`,
+        amount,
+        type: 'Egress',
+      };
+
+      const receiverTransactionData: CreateTransactionDto = {
+        userId: receiverId,
+        title: `money transfer`,
+        description: `Transfered money from user ${senderId}`,
+        amount,
+        type: 'Ingress',
+      };
+
       await Promise.all([
-        senderAccount.decrement('balance', { by: amount, transaction }),
-        receiverAccount.increment('balance', { by: amount, transaction }),
+        senderBalance.decrement('balance', { by: amount, transaction }),
+        receiverBalance.increment('balance', { by: amount, transaction }),
+        this.transactionService.createTransaction(senderTransactionData, {
+          transaction,
+        }),
+        await this.transactionService.createTransaction(
+          receiverTransactionData,
+          {
+            transaction,
+          },
+        ),
       ]);
 
-      const updatedSenderAccount = await senderAccount.reload({ transaction });
+      const updatedSenderBalance = await senderBalance.reload({ transaction });
 
-      return { sender: updatedSenderAccount.balance };
+      return { sender: updatedSenderBalance.balance };
     });
   }
 }

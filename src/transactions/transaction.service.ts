@@ -26,16 +26,19 @@ export class TransactionService {
     return { transaction };
   }
 
-  async createTransaction(input) {
+  async createTransaction(input, options = {}) {
     const { userId, title, description, amount, type } = input;
 
-    const transaction = await this.transactionModel.create({
-      title,
-      description,
-      amount,
-      userId,
-      type,
-    });
+    const transaction = await this.transactionModel.create(
+      {
+        title,
+        description,
+        amount,
+        userId,
+        type,
+      },
+      options,
+    );
 
     return { transaction };
   }
