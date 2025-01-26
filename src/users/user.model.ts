@@ -1,4 +1,12 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  HasMany,
+  HasOne,
+} from 'sequelize-typescript';
+import { Balance } from 'src/balance/balance.model';
 import { Transaction } from 'src/transactions/transaction.model';
 
 @Table({
@@ -21,16 +29,13 @@ export class User extends Model {
   email: string;
 
   @Column({
-    type: DataType.INTEGER,
-    defaultValue: 0,
-  })
-  balance: number;
-
-  @Column({
     type: DataType.STRING(),
     allowNull: false,
   })
   password: string;
+
+  @HasOne(() => Balance)
+  balance: Balance;
 
   @HasMany(() => Transaction)
   transactions: Transaction[];

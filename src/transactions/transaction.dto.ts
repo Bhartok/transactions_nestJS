@@ -1,5 +1,11 @@
 // create-transaction.dto.ts
-import { IsString, IsNumber, IsOptional, IsEnum } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsEnum,
+  IsUUID,
+} from 'class-validator';
 
 export enum TransactionType {
   INGRESS = 'Ingress',
@@ -7,6 +13,9 @@ export enum TransactionType {
 }
 
 export class CreateTransactionDto {
+  @IsUUID()
+  userId: string;
+
   @IsString()
   title: string;
 
