@@ -4,15 +4,15 @@ import {
   Injectable,
 } from '@nestjs/common';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
-import { User } from 'src/users/user.model';
+import { User } from '../users/entities/user.model';
 import { SignupInputDto, SignupResponseDto } from './dto/signup-user.dto';
 import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { Sequelize } from 'sequelize';
-import { Balance } from 'src/balance/balance.model';
+import { Balance } from '../balance/balance.model';
 import { SigninDto } from './dto/signin-user.dto';
-import { CreateTransactionDto } from 'src/transactions/transaction.dto';
-import { TransactionService } from 'src/transactions/transaction.service';
+import { CreateTransactionDto } from '../transactions/dto/transaction.dto';
+import { TransactionService } from '../transactions/transaction.service';
 
 @Injectable({})
 export class AuthService {

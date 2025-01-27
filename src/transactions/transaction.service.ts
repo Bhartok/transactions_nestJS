@@ -1,5 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { Transaction } from './transaction.model';
+import { Transaction } from './entitites/transaction.model';
 import { InjectModel } from '@nestjs/sequelize';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
@@ -7,8 +7,7 @@ import { Cache } from 'cache-manager';
 @Injectable()
 export class TransactionService {
   constructor(
-    @InjectModel(Transaction)
-    private transactionModel: typeof Transaction,
+    @InjectModel(Transaction) private transactionModel: typeof Transaction,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
