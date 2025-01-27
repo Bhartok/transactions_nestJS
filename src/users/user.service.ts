@@ -29,8 +29,9 @@ export class UsersService {
     return user;
   }
 
-  async getUserMoney(id: string): Promise<User> {
-    return await this.userModel.findByPk(id, {
+  async getUserMoney(id: string): Promise<Balance> {
+    return await this.balanceModel.findOne({
+      where: { userId: id },
       attributes: ['balance'],
     });
   }

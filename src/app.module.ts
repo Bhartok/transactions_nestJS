@@ -5,8 +5,13 @@ import { UserModule } from './users/user.module';
 import { TransactionModule } from './transactions/transaction.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { RedisOptions } from './db/redis-config';
+import { ConfigModule } from '@nestjs/config';
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: `.env.${process.env.NODE_ENV || 'development'}`,
+      isGlobal: true,
+    }),
     AuthModule,
     DatabaseModule,
     UserModule,
