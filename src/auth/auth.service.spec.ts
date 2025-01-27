@@ -80,10 +80,9 @@ describe('AuthService', () => {
       const salt = 'carboncio';
 
       const hashedPassword = await service.hashPassword(password, salt);
-
-      expect(hashedPassword).toBeDefined();
-      expect(typeof hashedPassword).toBe('string');
-      expect(hashedPassword.length).toBe(128);
+      expect(hashedPassword).toEqual(
+        '447c8deeae216d9e61b267674ccae15ab40635514c87ba1fbbb89e54e7f1dcfceb57bce1b5d0f4f91ab48502d4b572448ff4dc84ac0fbe536ffd100a504f15b6',
+      );
     });
   });
 
