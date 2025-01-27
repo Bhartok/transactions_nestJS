@@ -6,8 +6,8 @@ import {
   HasMany,
   HasOne,
 } from 'sequelize-typescript';
-import { Balance } from 'src/balance/balance.model';
-import { Transaction } from 'src/transactions/transaction.model';
+import { Balance } from '../../balance/balance.model';
+import { Transaction } from '../../transactions/entitites/transaction.model';
 
 @Table({
   tableName: 'users',

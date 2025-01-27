@@ -1,19 +1,32 @@
-import { Injectable } from '@nestjs/common';
-import { Transaction } from './transaction.model';
+import { Inject, Injectable } from '@nestjs/common';
+import { Transaction } from './entitites/transaction.model';
 import { InjectModel } from '@nestjs/sequelize';
+import { CACHE_MANAGER } from '@nestjs/cache-manager';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class TransactionService {
   constructor(
-    @InjectModel(Transaction)
-    private transactionModel: typeof Transaction,
+    @InjectModel(Transaction) private transactionModel: typeof Transaction,
+    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
-  async getAll(id: string): Promise<{ transactions: Transaction[] }> {
+  async getAll(id: string): Promise<Transaction[]> {
+    const cacheName = `transactions${id}`;
+    const cachedTransactions: Transaction[] =
+      await this.cacheManager.get(cacheName);
+
+    if (cachedTransactions) {
+      return cachedTransactions;
+    }
+    // To simulate time to show the cache working.
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+
     const transactions = await this.transactionModel.findAll({
       where: { userId: id },
     });
-    return { transactions };
+    await this.cacheManager.set(cacheName, transactions, 10 * 1000);
+    return transactions;
   }
 
   async getTransactionById(

@@ -1,11 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { User } from './user.model';
+import { User } from './entities/user.model';
 import { InjectConnection, InjectModel } from '@nestjs/sequelize';
 import { Sequelize } from 'sequelize-typescript';
-import { PaginationDto } from './userPagination-dto';
-import { Balance } from 'src/balance/balance.model';
-import { CreateTransactionDto } from 'src/transactions/transaction.dto';
-import { TransactionService } from 'src/transactions/transaction.service';
+import { PaginationDto } from './dto/userPagination-dto';
+import { Balance } from '../balance/balance.model';
+import { CreateTransactionDto } from '../transactions/dto/transaction.dto';
+import { TransactionService } from '../transactions/transaction.service';
 
 @Injectable()
 export class UsersService {
