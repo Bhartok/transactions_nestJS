@@ -47,7 +47,7 @@ export class AuthService {
 
   async signup(dto: SignupInputDto): Promise<Partial<SignupResponseDto>> {
     const { email, password } = dto;
-    const { amount } = dto;
+    const amount = dto.amount ? dto.amount : 0;
     const hashPw = await this.hashPassword(password, 'carboncio');
     const transaction = await this.sequelize.transaction();
 
@@ -71,10 +71,9 @@ export class AuthService {
         amount,
       };
 
-      await this.transactionService.createTransaction(
-        { initialTransactionData },
-        { transaction },
-      );
+      await this.transactionService.createTransaction(initialTransactionData, {
+        transaction,
+      });
 
       await transaction.commit();
       return { id: user.id, email: user.email, amount: balance.balance };
